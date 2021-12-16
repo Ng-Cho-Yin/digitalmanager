@@ -1,15 +1,13 @@
 import streamlit as st
 from backend import download
-from backend import upload
-from backend import delete
+
 from backend import iterator
-from backend import openfile
+
 from backend import table
 from backend import render_pie_simple
 import pandas as pd
 import os.path
-import base64
-import time
+
 
 
 basic_directory = dict()
