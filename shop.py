@@ -4,10 +4,7 @@ from backend import download
 from backend import upload
 from backend import delete
 from backend import iterator
-from backend import openfile
 import os.path
-from datetime import date
-import random
 from backend import table
 
 basic_directory = dict()
