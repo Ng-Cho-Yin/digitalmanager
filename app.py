@@ -15,14 +15,14 @@ from basics import basics
 from warehouse import warehouse
 from backend import iterator
 
-import streamlit_authenticator as stauth
+
 from backend import download
-from backend import upload
+
 from backend import iterator
-from backend import delete
+
 import pandas as pd
 import os
-from backend import table
+
 from datetime import date
 
 
