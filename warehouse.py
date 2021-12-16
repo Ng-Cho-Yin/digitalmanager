@@ -11,7 +11,6 @@ import os.path
 import base64
 import time
 
-import matplotlib.pyplot as plt
 
 basic_directory = dict()
 warehouses_directory = dict()
