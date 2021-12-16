@@ -4,12 +4,11 @@ from backend import download
 from backend import upload
 from backend import delete
 from backend import iterator
-from backend import openfile
-from backend import render_set_style_of_single_bar
+
 import os.path
-from datetime import date
+
 from backend import table
-import datetime
+
 
 basic_directory = dict()
 shop_directory = dict()
