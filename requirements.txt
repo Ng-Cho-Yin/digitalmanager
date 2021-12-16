@@ -8,3 +8,4 @@ pybase64==1.1.4
 pytime<0.2.1
 gunicorn<20.1.0
 oss2 == 2.15.0
+streamlit-aggrid == 0.2.2
