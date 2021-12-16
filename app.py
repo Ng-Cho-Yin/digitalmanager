@@ -3,11 +3,11 @@
 
 import streamlit as st
 st.set_page_config(layout='wide')
-from marketreport import marketreport
-from department import department
+#from marketreport import marketreport
+#from department import department
 from productpage import productpage
 from shop import shop
-from huma_reso import huma_reso
+#from huma_reso import huma_reso
 from logistics import logistics
 from client import client
 from accounts import accounts
