@@ -80,11 +80,17 @@ def logistics():
     col2.metric(label="快递运输中", value=B)
     col3.metric(label="到达订单", value=C)
     col4.metric(label="问题订单", value=D)
-    render_set_style_of_single_bar(["未发快递","快递运输中","到达订单","问题订单"],[A,B,C,D])
+    render_set_style_of_single_bar(["未发快递", "快递运输中", "到达订单", "问题订单"], [A, B, C, D])
     logistics_logging('物流记录.csv', False, False, True, False)
 
+    function_pages = [
+        "未发订单",
+        "运输中订单",
+        '到达订单',
+        '问题订单'
+    ]
 
-    pool = st.selectbox('选择物流池', ['未发订单', '运输中订单', '到达订单', '问题订单'])
+    pool = st.radio('选择物流池', function_pages)
     if pool == '未发订单':
         unpack()
     if pool == '运输中订单':
@@ -98,7 +104,7 @@ def logistics():
 
 
 def make_trans_order():
-    with st.expander('发起运输订单',expanded=True):
+    with st.expander('发起运输订单', expanded=True):
         if st.checkbox('设置新订单'):
             platform = st.selectbox('平台', nonread_file(buckets[0], '平台/平台.csv', '平台.csv', '平台', True))
             account = st.selectbox('帐号', [str(i) + '-' + str(k) for i, k in
@@ -131,10 +137,12 @@ def make_trans_order():
                 tip_platform = (list(product_directory['SKU'][product_type][product][tip_lang].keys())[0])
                 tip_product = '基础资料'
                 tip_file = (
-                    list(product_directory['SKU'][product_type][product][tip_lang][tip_platform][tip_product].keys())[0])
+                    list(product_directory['SKU'][product_type][product][tip_lang][tip_platform][tip_product].keys())[
+                        0])
                 volume = nonread_file(buckets[1],
                                       'SKU/' + str(product_type) + '/' + str(product) + '/' + str(tip_lang) + '/' + str(
-                                          tip_platform) + '/' + str(tip_product) + '/' + str(tip_file), str(tip_file), '体积',
+                                          tip_platform) + '/' + str(tip_product) + '/' + str(tip_file), str(tip_file),
+                                      '体积',
                                       False, 0)
 
                 st.write('体积:', amount * volume, '平方米')
@@ -170,13 +178,12 @@ def make_trans_order():
 
 
 def unpack():
-
     u1, u2 = st.columns((3, 1))
     if len(list(logistics_directory['未发订单'].keys())) > 1:
         for u in list(logistics_directory['未发订单'].keys()):
             if len(u) > 1:
-                with u1.expander(u,expanded=True):
-                    if st.checkbox('查看'+u+'相关资料'):
+                with u1.expander(u, expanded=True):
+                    if st.checkbox('查看' + u + '相关资料'):
                         for files in list(logistics_directory['未发订单'][u].keys()):
                             fname, extension = os.path.splitext(files)
                             if extension == '.csv':
@@ -201,7 +208,7 @@ def unpack():
                                 # Displaying File
                                 st.markdown(pdf_display, unsafe_allow_html=True)
 
-                        unpacked = st.form(key='unpacked'+files)
+                        unpacked = st.form(key='unpacked' + files)
                         mail_code = unpacked.text_input('输入快递单号', key=str(u) + '输入快递单号')
 
                         try:
@@ -219,10 +226,12 @@ def unpack():
                         try:
                             cost = nonread_file(buckets[0], '物流/' + '物流模式数据.csv', '物流模式数据.csv', '成本每平方米(人民币)', False,
                                                 list(ds['物流模式']).index(mail_mode))
-                            travel_time = nonread_file(buckets[0], '物流/' + '物流模式数据.csv', '物流模式数据.csv', '最大预计运输时间', False,
+                            travel_time = nonread_file(buckets[0], '物流/' + '物流模式数据.csv', '物流模式数据.csv', '最大预计运输时间',
+                                                       False,
                                                        list(ds['物流模式']).index(mail_mode))
                             position = int(
-                                nonread_file(buckets[2], '未发订单' + '/' + u + '/' + u + '.csv', u + '.csv', '资料', True).index(
+                                nonread_file(buckets[2], '未发订单' + '/' + u + '/' + u + '.csv', u + '.csv', '资料',
+                                             True).index(
                                     '体积'))
                             unit = nonread_file(buckets[2], '未发订单' + '/' + u + '/' + u + '.csv', u + '.csv', '值', False,
                                                 position)
@@ -277,7 +286,8 @@ def unpack():
                                                       content=[log_dict['产品类别'], log_dict['产品'], log_dict['数量'],
                                                                log_dict['体积'], log_dict['发出地仓库'], log_dict['发出日期'],
                                                                log_dict['目的地仓库'], log_dict['运输模式']
-                                                          , log_dict['最大预计运输时间'], log_dict['预计到达日期'], log_dict['预计运输总成本'],
+                                                          , log_dict['最大预计运输时间'], log_dict['预计到达日期'],
+                                                               log_dict['预计运输总成本'],
                                                                log_dict['快递号'], log_dict['帐号'], log_dict['发起用户']])
 
                                 else:
@@ -287,18 +297,13 @@ def unpack():
                             st.success(u + '运输中')
 
 
-
-
-
-
 def moving_pack():
-
     logistics_logging('运输中物流记录.csv', True, False, False, True)
     u1, u2 = st.columns((3, 1))
     if len(list(logistics_directory['运输中订单'].keys())) > 1:
         for u in list(logistics_directory['运输中订单'].keys()):
             if len(u) > 1:
-                with u1.expander(u,expanded=True):
+                with u1.expander(u, expanded=True):
                     if st.checkbox('查看' + u + '相关资料'):
                         for files in list(logistics_directory['运输中订单'][u].keys()):
                             fname, extension = os.path.splitext(files)
@@ -389,13 +394,12 @@ def moving_pack():
 
 
 def arrive_pack():
-
-    logistics_logging('物流记录.csv', True, False, False, False,height = 600)
+    logistics_logging('物流记录.csv', True, False, False, False, height=600)
     u1, u2 = st.columns((3, 1))
     if len(list(logistics_directory['到达订单'].keys())) > 1:
         for u in list(logistics_directory['到达订单'].keys()):
             if len(u) > 1:
-                with u1.expander(u,expanded=True):
+                with u1.expander(u, expanded=True):
                     if st.checkbox('查看' + u + '相关资料'):
                         for files in list(logistics_directory['到达订单'][u].keys()):
                             path = '到达订单' + '/' + u + '/' + files
@@ -403,19 +407,18 @@ def arrive_pack():
 
 
 def issue_pack():
-
     u1, u2 = st.columns((3, 1))
     if len(list(logistics_directory['问题订单'].keys())) > 1:
         for u in list(logistics_directory['问题订单'].keys()):
             if len(u) > 1:
-                with u1.expander(u,expanded = True):
+                with u1.expander(u, expanded=True):
                     if st.checkbox('查看' + u + '相关资料'):
                         for files in list(logistics_directory['问题订单'][u].keys()):
                             path = '问题订单' + '/' + u + '/' + files
                             openfile(buckets[2], path, files, False)
 
 
-def logistics_logging(csv, show, add, delet, check_delay, content=None, dele_val=None,height = None):
+def logistics_logging(csv, show, add, delet, check_delay, content=None, dele_val=None, height=None):
     path = '物流记录' + '/' + csv
     download(buckets[2], str(path), csv)
     df = pd.read_csv(csv)
@@ -424,7 +427,7 @@ def logistics_logging(csv, show, add, delet, check_delay, content=None, dele_val
     except:
         pass
     if show:
-        table(df, df.columns, csv, False,height = height)
+        table(df, df.columns, csv, False, height=height)
     if add:
         add = pd.Series(content, index=df.columns)
         df = df.append(add, ignore_index=True)
