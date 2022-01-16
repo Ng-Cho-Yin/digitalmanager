@@ -17,7 +17,6 @@ product_directory = dict()
 buckets = ['karqproducts']
 
 
-
 def protempload(bucket):
     global product_directory
 
@@ -54,9 +53,18 @@ def productpage():
     col2.metric(label="产品总量", value=ver)
     col3.metric(label="SKU总量", value=sku)
     col4.metric(label="驳回项目", value=failed)
-    render_set_style_of_single_bar(["产品审核中","产品总量","SKU总量","驳回项目"],[unver,ver,sku,failed])
+    render_set_style_of_single_bar(["产品审核中", "产品总量", "SKU总量", "驳回项目"], [unver, ver, sku, failed])
 
-    function = st.selectbox('', ['审核产品', '打开产品', '添加产品资料', '打开SKU', '添加SKU资料', '修改产品资料范本'])
+    function_pages = [
+        "审核产品",
+        "打开产品",
+        '添加产品资料',
+        '打开SKU',
+        '添加SKU资料',
+        '修改产品资料范本'
+    ]
+
+    function = st.radio('', function_pages)
 
     if function == '审核产品':
         protempload(buckets[0])
@@ -373,7 +381,7 @@ def verified_sku():
                                         pass
 
                                     table(df, df.columns, str(item) + str(tar), True)
-                                    
+
 
 
                                 except:
@@ -441,7 +449,7 @@ def product_uploadinfo(verify, dire, Type, Name):
             df.drop('Unnamed: 0', axis=1, inplace=True)
         except:
             pass
-        col1,col2 = st.columns((2,3))
+        col1, col2 = st.columns((2, 3))
         for col in df.columns:
             df.loc[0, col] = col1.text_input(col)
         for col in df.columns:
