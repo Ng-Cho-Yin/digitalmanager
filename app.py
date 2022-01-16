@@ -78,7 +78,7 @@ def login_page():
     today = date.today()
     #st.subheader(today)
     col1, col2 = st.columns((3,3))
-    col2.image('2.jpg')
+    col2.image('background.jpg')
     col1.title("""数字化电商办公室 — KARQLIFE""")
 
     global basic_directory
@@ -118,7 +118,7 @@ def login_page():
 
 def mainpage():
 
-    st.sidebar.image('pic.png')
+    st.sidebar.image('logo.png')
     page = st.sidebar.radio('选择页面',tuple(function_pages.keys()))
 
     if not st.session_state.login:
