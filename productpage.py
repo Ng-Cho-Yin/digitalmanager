@@ -53,9 +53,11 @@ def productpage():
     col2.metric(label="产品总量", value=ver)
     col3.metric(label="SKU总量", value=sku)
     col4.metric(label="驳回项目", value=failed)
-    render_set_style_of_single_bar(["产品审核中", "产品总量", "SKU总量", "驳回项目"], [unver, ver, sku, failed])
+
 
     function_pages = [
+        "产品(SKU)搜索",
+        "产品(SKU)总览",
         "审核产品",
         "打开产品",
         '添加产品资料',
@@ -63,9 +65,18 @@ def productpage():
         '添加SKU资料',
         '修改产品资料范本'
     ]
-
-    function = st.radio('', function_pages)
-
+    col1, col2 = st.columns((1, 3))
+    with col1:
+        func = st.expander('功能', expanded=True)
+        function = func.radio('', function_pages)
+    with col2:
+        render_set_style_of_single_bar(["产品审核中", "产品总量", "SKU总量", "驳回项目"], [unver, ver, sku, failed])
+    if function == '产品(SKU)搜索':
+        protempload(buckets[0])
+        product_search(version = 1)
+    if function == '产品(SKU)总览':
+        protempload(buckets[0])
+        product_gallery()
     if function == '审核产品':
         protempload(buckets[0])
         productverifypage()
@@ -87,6 +98,7 @@ def productpage():
             formatter()
 
 
+
 timestr = time.strftime("%Y%m%d-%H%M%S")
 
 
@@ -98,6 +110,92 @@ def csv_downloader(data, name):
     st.markdown("#### " + name + " ###")
     href = f'<a href="data:file/csv;base64,{b64}" download="{new_filename}">点击下载 </a>'
     st.markdown(href, unsafe_allow_html=True)
+
+def product_search(version):
+    global product_directory
+    st.subheader('产品(SKU)搜索:')
+    if version == 1:
+        with st.form(key='searchform'):
+            nav1,nav2,nav3 = st.columns((3,2,1))
+            with nav1:
+                search_term = st.text_input('名称')
+            with nav2:
+                feature1 = st.text_input("特征1")
+            with nav3:
+                st.text('查询')
+                submit_search = st.form_submit_button('确认')
+    if version == 2:
+        sku_list = []
+
+        for cc in (product_directory['SKU']):
+            for dd in (product_directory['SKU'][cc]):
+                sku_list.append((cc, dd))
+
+        sku_dict = {letter: score for score, letters in sku_list for letter in letters.split()}
+        list(sku_dict.keys())
+        sku_list = list(sku_dict.keys())
+        sku_list.insert(0,' ')
+        with st.form(key='searchform'):
+            nav1,nav2,nav3 = st.columns((4,2,1))
+            with nav1:
+                select = st.selectbox('搜索',sku_list)
+            with nav3:
+                st.text('查询')
+                submit_search = st.form_submit_button('确认')
+
+def product_gallery():
+    global product_directory
+    st.subheader('产品(SKU)总览:')
+    sku_ls = []
+    for cc in (product_directory['SKU']):
+        for dd in (product_directory['SKU'][cc]):
+            sku_ls.append([cc, dd])
+
+    for sku in sku_ls:
+        typ = sku[0]
+        item = sku[1]
+        col1, col2 = st.columns((4, 1))
+        col1.write(item)
+
+        with st.expander(str(item), expanded=True):
+            if st.checkbox('查看' + str(item) + '相关文件'):
+                try:
+                    lan = list(product_directory['SKU'][typ][item].keys())
+                    lang = st.selectbox('语言', lan, key=item)
+                    plats = list(product_directory['SKU'][typ][item][lang].keys())
+                    platform = st.selectbox('平台', plats, key=item)
+                    col1, col2, col3, col4 = st.columns((3, 3, 3, 3))
+                    for tar in filter(lambda x: len(x) > 1,
+                                      list(product_directory['SKU'][typ][item][lang][platform].keys())):
+
+                        for tar2 in filter(lambda x: len(x) > 1,
+                                           list(product_directory['SKU'][typ][item][lang][platform][tar].keys())):
+                            col1.write(tar2)
+
+                            if col2.checkbox('打开', key=str(item) + str(tar) + '-SKU'):
+                                path = 'SKU/' + str(typ) + '/' + str(item) + '/' + str(
+                                    lang) + '/' + str(platform) + '/' + tar + '/' + tar2
+
+                                download(buckets[0], str(path), tar2)
+                                try:
+                                    df = pd.read_csv(tar2)
+                                    try:
+                                        df.drop('Unnamed: 0', axis=1, inplace=True)
+                                    except:
+                                        pass
+
+                                    table(df, df.columns, str(item) + str(tar), True)
+
+
+
+                                except:
+                                    download(
+                                        buckets[0],
+                                        str(path),
+                                        tar2)
+                                    st.image(tar2)
+                except:
+                    print('error:verified_sku()')
 
 
 def productverifypage():
