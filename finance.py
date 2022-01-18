@@ -1,19 +1,8 @@
-from forex_python.converter import CurrencyRates
 import streamlit as st
 import pandas as pd
 
 def finance():
-    c = CurrencyRates()
-    usd = round(c.get_rate('USD', 'CNY'), 2)
-    eur = round(c.get_rate('EUR', 'CNY'), 2)
-    gbp = round(c.get_rate('GBP', 'CNY'), 2)
-    cad = round(c.get_rate('CAD', 'CNY'), 2)
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric(label="USD/CNY", value=usd)
-    col2.metric(label="EUR/CNY", value=eur)
-    col3.metric(label="GBP/CNY", value=gbp)
-    col4.metric(label="CAD/CNY", value=cad)
+    
 
 
     class Create_objs:
