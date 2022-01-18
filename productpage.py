@@ -152,8 +152,6 @@ def product_search(version):
             for sku in sku_ls:
                 typ = sku_dict[sku]
                 item = sku
-                col1, col2 = st.columns((4, 1))
-                col1.write(item)
 
                 with st.expander(str(item), expanded=True):
                     if st.checkbox('查看' + str(item) + '相关文件'):
@@ -206,8 +204,7 @@ def product_gallery():
     for sku in sku_ls:
         typ = sku[0]
         item = sku[1]
-        col1, col2 = st.columns((4, 1))
-        col1.write(item)
+
 
         with st.expander(str(item), expanded=True):
             if st.checkbox('查看' + str(item) + '相关文件'):
@@ -429,8 +426,7 @@ def verified_product():
     product_ls = filter(lambda x: len(x) > 1, list(product_directory['已审核'][typ].keys()))
     for item in product_ls:
 
-        col1, col2 = st.columns((4, 1))
-        col1.write(item)
+
 
         with st.expander(str(item), expanded=True):
             if st.checkbox('查看' + str(item) + '相关文件'):
@@ -500,8 +496,6 @@ def verified_sku():
     sku_ls = filter(lambda x: len(x) > 1, list(product_directory['SKU'][typ].keys()))
     for item in sku_ls:
 
-        col1, col2 = st.columns((4, 1))
-        col1.write(item)
 
         with st.expander(str(item), expanded=True):
             if st.checkbox('查看' + str(item) + '相关文件'):
