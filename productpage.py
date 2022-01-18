@@ -10,7 +10,9 @@ import os.path
 import base64
 import time
 
-# 产品+ SKU码 ASIN码 产品编号
+# Initialize session state
+if 'search_sku' not in st.session_state:
+    st.session_state.search_sku = False
 
 
 product_directory = dict()
@@ -73,7 +75,7 @@ def productpage():
         render_set_style_of_single_bar(["产品审核中", "产品总量", "SKU总量", "驳回项目"], [unver, ver, sku, failed])
     if function == '产品(SKU)搜索':
         protempload(buckets[0])
-        product_search(version = 1)
+        product_search(version = 2)
     if function == '产品(SKU)总览':
         protempload(buckets[0])
         product_gallery()
@@ -136,13 +138,63 @@ def product_search(version):
         sku_list = list(sku_dict.keys())
         sku_list.insert(0,' ')
         with st.form(key='searchform'):
-            nav1,nav2,nav3 = st.columns((4,2,1))
+            nav1,nav2,nav3 = st.columns((3,2,1))
             with nav1:
                 select = st.selectbox('搜索',sku_list)
+            with nav2:
+                st.selectbox('筛选',[])
             with nav3:
                 st.text('查询')
                 submit_search = st.form_submit_button('确认')
+                st.session_state.search_sku = True
+            sku_ls = [select]
+        if submit_search or st.session_state.search_sku and select!=' ':
+            for sku in sku_ls:
+                typ = sku_dict[sku]
+                item = sku
+                col1, col2 = st.columns((4, 1))
+                col1.write(item)
 
+                with st.expander(str(item), expanded=True):
+                    if st.checkbox('查看' + str(item) + '相关文件'):
+                        try:
+                            lan = list(product_directory['SKU'][typ][item].keys())
+                            lang = st.selectbox('语言', lan, key=item)
+                            plats = list(product_directory['SKU'][typ][item][lang].keys())
+                            platform = st.selectbox('平台', plats, key=item)
+                            col1, col2, col3, col4 = st.columns((3, 3, 3, 3))
+                            for tar in filter(lambda x: len(x) > 1,
+                                              list(product_directory['SKU'][typ][item][lang][platform].keys())):
+
+                                for tar2 in filter(lambda x: len(x) > 1,
+                                                   list(product_directory['SKU'][typ][item][lang][platform][
+                                                            tar].keys())):
+                                    col1.write(tar2)
+
+                                    if col2.checkbox('打开', key=str(item) + str(tar) + '-SKU'):
+                                        path = 'SKU/' + str(typ) + '/' + str(item) + '/' + str(
+                                            lang) + '/' + str(platform) + '/' + tar + '/' + tar2
+
+                                        download(buckets[0], str(path), tar2)
+                                        try:
+                                            df = pd.read_csv(tar2)
+                                            try:
+                                                df.drop('Unnamed: 0', axis=1, inplace=True)
+                                            except:
+                                                pass
+
+                                            table(df, df.columns, str(item) + str(tar), True)
+
+
+
+                                        except:
+                                            download(
+                                                buckets[0],
+                                                str(path),
+                                                tar2)
+                                            st.image(tar2)
+                        except:
+                            print('error:verified_sku()')
 def product_gallery():
     global product_directory
     st.subheader('产品(SKU)总览:')
