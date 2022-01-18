@@ -1,40 +1,42 @@
-# https://karqlife.herokuapp.com/
-
+# https://digitalmanager.herokuapp.com/
 
 import streamlit as st
-st.set_page_config(layout='wide')
-#from marketreport import marketreport
-#from department import department
 from productpage import productpage
 from shop import shop
-#from huma_reso import huma_reso
 from logistics import logistics
 from client import client
 from accounts import accounts
 from basics import basics
 from warehouse import warehouse
-from backend import iterator
+from finance import finance
 
-
+#import streamlit_authenticator as stauth
 from backend import download
-
+from backend import upload
 from backend import iterator
-
+from backend import delete
 import pandas as pd
 import os
-
+from backend import table
 from datetime import date
 
 
+st.set_page_config(layout='wide',page_title='电商智能管理平台')
+
+hide_menu_style = """
+                    <style>
+                    #MainMenu {visibility:hidden;}
+                    footer {visibility:hidden;}
+                    </style>
+                """
+st.markdown(hide_menu_style,unsafe_allow_html=True)
 if 'member' not in st.session_state:
     st.session_state.member = ''
 function_pages = {
-    # '经营报告': marketreport,
-    # "部门信息": department,
+    "财务资料": finance,
     "产品资料": productpage,
     "店铺管理": shop,
     '店铺匹配': accounts,
-    # "人事资料": huma_reso,
     '物流管理': logistics,
     '仓库管理': warehouse,
     '客户维护': client,
@@ -79,7 +81,7 @@ def login_page():
     #st.subheader(today)
     col1, col2 = st.columns((3,3))
     col2.image('background.jpg')
-    col1.title("""数字化电商办公室 — KARQLIFE""")
+    col1.title("""电商智能管理平台 — KARQLIFE""")
 
     global basic_directory
 
