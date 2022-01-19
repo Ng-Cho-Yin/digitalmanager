@@ -1,16 +1,20 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+
 
 def finance():
     
-
 
     class Create_objs:
 
         def __init__(self, name, datafile=None):
             self.df = pd.read_csv(datafile)
             self.name = name
+            if self.name in ['other','total']:
+                self.df[self.name] = self.df[self.name].str.replace(",", "").astype(float)
             self.sum = self.df[self.name].sum()
+
     instanceNames = ['product sales', 'product sales tax', 'shipping credits', 'shipping credits tax',
                      'gift wrap credits', 'giftwrap credits tax', 'promotional rebates',
                      'promotional rebates tax', 'marketplace withheld tax', 'selling fees', 'fba fees',
