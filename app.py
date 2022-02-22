@@ -1,7 +1,31 @@
-# https://digitalmanager.herokuapp.com/
+# https://karqlife.herokuapp.com/
+
+
+# [theme]
+#
+# # Primary accent for interactive elements
+# primaryColor = '#FF974B'
+#
+# # Background color for the main content area
+# backgroundColor = '#FFFFFF'
+#
+# # Background color for sidebar and most interactive widgets
+# secondaryBackgroundColor = '#F5F5F5'
+#
+# # Color used for almost all text
+# textColor = '#31333F'
+#
+# # Font family for all text in the app, except code blocks
+# # Accepted values (serif | sans serif | monospace)
+# # Default: "sans serif"
+# font = "sans serif"
+
 
 import streamlit as st
 from productpage import productpage
+from mainpage import mainpage
+from huma import huma
+from quiz import quiz
 from shop import shop
 from logistics import logistics
 from client import client
@@ -9,8 +33,6 @@ from accounts import accounts
 from basics import basics
 from warehouse import warehouse
 from finance import finance
-
-#import streamlit_authenticator as stauth
 from backend import download
 from backend import upload
 from backend import iterator
@@ -20,8 +42,7 @@ import os
 from backend import table
 from datetime import date
 
-
-st.set_page_config(layout='wide',page_title='电商智能管理平台')
+st.set_page_config(layout='wide', page_title='电商智能管理平台')
 
 hide_menu_style = """
                     <style>
@@ -29,11 +50,14 @@ hide_menu_style = """
                     footer {visibility:hidden;}
                     </style>
                 """
-st.markdown(hide_menu_style,unsafe_allow_html=True)
+st.markdown(hide_menu_style, unsafe_allow_html=True)
 if 'member' not in st.session_state:
     st.session_state.member = ''
 function_pages = {
-    "财务资料": finance,
+    "主页":mainpage,
+    #"学习中心":quiz,
+    "人力资源":huma,
+    "财务管理": finance,
     "产品资料": productpage,
     "店铺管理": shop,
     '店铺匹配': accounts,
@@ -41,7 +65,6 @@ function_pages = {
     '仓库管理': warehouse,
     '客户维护': client,
     '基础数据': basics
-
 }
 
 func_ls = []
@@ -78,8 +101,8 @@ def nonread_file(bucket, path, file, col, lsit, pos=None):
 
 def login_page():
     today = date.today()
-    #st.subheader(today)
-    col1, col2 = st.columns((3,3))
+    # st.subheader(today)
+    col1, col2 = st.columns((3, 3))
     col2.image('background.jpg')
     col1.title("""电商智能管理平台 — KARQLIFE""")
 
@@ -91,10 +114,10 @@ def login_page():
     account = list(filter(lambda x: len(x) > 1, account))
     pss = [str(i) for i in nonread_file(buckets[0], '用户/用户.csv', '用户.csv', '密码', True)]
     pss = list(filter(lambda x: len(x) > 1, pss))
-    ls = dict(zip(account,pss))
+    ls = dict(zip(account, pss))
 
-    st.session_state.member = acc = col1.text_input('帐号')
-    pas = col1.text_input('密码')
+    st.session_state.member = acc = col1.text_input('帐号',help = '还没有自己的工作帐号？请通知管理员开启你自己的工作帐号吧')
+    pas = col1.text_input('密码',type='password',help = '忘记密码请联系管理员')
     enter = col1.button('登入')
 
     if enter:
@@ -119,9 +142,8 @@ def login_page():
 # f
 
 def mainpage():
-
     st.sidebar.image('logo.png')
-    page = st.sidebar.radio('选择页面',tuple(function_pages.keys()))
+    page = st.sidebar.radio('选择页面', tuple(function_pages.keys()))
 
     if not st.session_state.login:
         function_pages[page]()
