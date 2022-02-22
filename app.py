@@ -1,25 +1,6 @@
 # https://karqlife.herokuapp.com/
 
 
-# [theme]
-#
-# # Primary accent for interactive elements
-# primaryColor = '#FF974B'
-#
-# # Background color for the main content area
-# backgroundColor = '#FFFFFF'
-#
-# # Background color for sidebar and most interactive widgets
-# secondaryBackgroundColor = '#F5F5F5'
-#
-# # Color used for almost all text
-# textColor = '#31333F'
-#
-# # Font family for all text in the app, except code blocks
-# # Accepted values (serif | sans serif | monospace)
-# # Default: "sans serif"
-# font = "sans serif"
-
 
 import streamlit as st
 from productpage import productpage
@@ -55,7 +36,6 @@ if 'member' not in st.session_state:
     st.session_state.member = ''
 function_pages = {
     "主页":mainpage,
-    #"学习中心":quiz,
     "人力资源":huma,
     "财务管理": finance,
     "产品资料": productpage,
