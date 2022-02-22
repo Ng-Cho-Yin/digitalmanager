@@ -6,7 +6,6 @@ import streamlit as st
 from productpage import productpage
 from mainpage import mainpage
 from huma import huma
-from quiz import quiz
 from shop import shop
 from logistics import logistics
 from client import client
