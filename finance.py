@@ -22,9 +22,16 @@ def finance():
 
     instanceNames_Chi = ['产品销售', '产品销售税', '订单的运费(买家支付)', '订单的运费税', '礼品包装费(买家支付)', '礼品包装费税', '促销回扣',
                          '促销回扣税', '市场预扣税', '销售费用', 'FBA费用', '其他交易费用', '其他', '利润']
+    
+    cat = ['date/time','settlement' 'id','type','order id','sku','description','quantity','marketplace','account type','fulfillment','order city',
+                   'order state','order postal','tax collection model','product sales','product sales tax','shipping credits','shipping credits tax',
+                   'gift wrap credits','giftwrap credits tax','promotional rebates','promotional rebates tax','marketplace withheld tax','selling fees','fba fees',
+                   'other transaction fees','other','total']
+    
     uploaded_file = st.file_uploader('交易记录上传口')
     if uploaded_file is not None:
                 uploaded_file = pd.read_csv(uploaded_file, skiprows=7)
+                uploaded_file.columns = cat
                 uploaded_file.to_csv('logs2.csv')
                 res = {instanceNames[i]: instanceNames_Chi[i] for i in range(len(instanceNames))}
                 holder = {name: Create_objs(name=name, datafile='logs2.csv') for name in instanceNames}
