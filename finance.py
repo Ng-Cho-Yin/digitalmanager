@@ -12,7 +12,7 @@ def data_clean(x):
 
 def finance():
     
-    st.subtitle("财务管理")
+    st.subtitle("财务报告")
 
     class Create_objs:
 
