@@ -43,7 +43,7 @@ def exporter():
 
             uploaded_file = st.file_uploader('交易记录上传口')
             if uploaded_file is not None:
-                uploaded_file = pd.read_csv(uploaded_file, skiprows=7)
+                uploaded_file = pd.read_csv(uploaded_file, skiprows=7, encoding = "ISO-8859-1")
 
                 if 'account type' in uploaded_file:
 
