@@ -107,7 +107,7 @@ def ag_form(index, col_ls):
     st.write(response['data'])
 
 
-def table(data, cls, name, edit, bucket=None, path=None, fit=False,height=300):
+def table(data, cls, name, edit, bucket=None, path=None, fit=False,height=300,local=False):
     global ag
     gb = GridOptionsBuilder.from_dataframe(data)
     # make all columns editable
@@ -158,10 +158,10 @@ def table(data, cls, name, edit, bucket=None, path=None, fit=False,height=300):
         if edit:
             if st.checkbox('更新文件', key=str(name)):
 
-                st.write("输出文件")
-                st.table(ag['data'])
+                #st.write("输出文件")
+                #st.table(ag['data'])
                 ag['data'].to_csv('updatedcsv.csv')
-                if st.checkbox('确认更新文件', key='用户.csv'):
+                if st.checkbox('确认更新文件', key=name):
                     plus = pd.read_csv('updatedcsv.csv')
                     for k in range(3):
                         content = [' ' for i in range(len(plus.columns))]
@@ -172,8 +172,11 @@ def table(data, cls, name, edit, bucket=None, path=None, fit=False,height=300):
                     except:
                         pass
                     plus.to_csv('updatedcsv.csv')
-                    upload(bucket, path, 'updatedcsv.csv')
-                    protempload(bucket[0])
+                    if not local:
+                        upload(bucket, path, 'updatedcsv.csv')
+                        protempload(bucket[0])
+                    if local:
+                        plus.to_csv('updatedcsv.csv')
     except:
         print('error:backend.table')
 
@@ -229,3 +232,13 @@ def render_set_style_of_single_bar(col,data):
         height="300px",
 
     )
+
+
+def nonread_file(bucket, path, file, col, lsit, pos=None):
+    download(bucket, path, file)
+    read = pd.read_csv(file)
+    os.remove(file)
+    if lsit:
+        return list(read[str(col)])
+    else:
+        return float(read[col].iloc[pos])
