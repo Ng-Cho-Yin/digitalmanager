@@ -453,7 +453,7 @@ def productverifypage():
                                 if deci == '批准':
                                     if st.checkbox('确认', key='批准确认' + product):
                                         for group in (
-                                        list(product_directory['未审核'][item][product][lang][platform].keys())):
+                                                list(product_directory['未审核'][item][product][lang][platform].keys())):
                                             for pssfile in (
                                                     list(
                                                         product_directory['未审核'][item][product][lang][platform][
@@ -470,7 +470,7 @@ def productverifypage():
 
                                     if st.checkbox('确认', key='不批准确认' + product):
                                         for group in (
-                                        list(product_directory['未审核'][item][product][lang][platform].keys())):
+                                                list(product_directory['未审核'][item][product][lang][platform].keys())):
                                             for pssfile in (
                                                     list(
                                                         product_directory['未审核'][item][product][lang][platform][
@@ -565,6 +565,10 @@ def verified_product():
                                           height=150)
 
                                 if '.jpg' in tar2:
+                                    download(
+                                        buckets[0],
+                                        str(path),
+                                        tar2)
                                     img = Image.open(tar2)
                                     print(img.width, img.height)
                                     img = img.resize((200, 200))
@@ -914,15 +918,6 @@ def product_uploadinfo(verify, dire, Type, Name):
     return product_directory
 
 
-PRODUCT_QA = """
- <div style="width:90%;height:100%;margin:1px;border-radius:5px;
-  background-color:#70dc70;font-size:18px;height:auto;border-left: 5px solid #dc70dc;">
- <h4 style="color:#000000;">{}</h4>
- <h4 style="color:#000000;">{}</h4>
- <h4 style="color:#000000;">{}</h4>
- <h6 style="color:#000000;text-align:center">{}</h6>
- </div>
- """
 
 
 def qa_format(qa):
