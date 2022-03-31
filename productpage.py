@@ -10,13 +10,14 @@ import os.path
 import base64
 import time
 from PIL import Image
+from backend import nonread_file
 
 # Initialize session state
 if 'search_sku' not in st.session_state:
     st.session_state.search_sku = False
 
 product_directory = dict()
-buckets = ['karqproducts']
+buckets = ['karqproducts', 'karqbasics','karqshops']
 
 
 def protempload(bucket):
@@ -57,14 +58,12 @@ def productpage():
     col4.metric(label="驳回项目", value=failed)
 
     function_pages = [
-        "产品(SKU)搜索",
-        "产品(SKU)总览",
-        "审核产品",
-        "打开产品",
-        '添加产品资料',
-        '打开SKU',
-        '添加SKU资料',
-        '修改产品资料范本'
+
+        "产品审核",
+        "产品总览",
+        'SKU总览',
+        '新增产品系列',
+        '产品范本修改'
     ]
     col1, col2 = st.columns((1, 3))
     with col1:
@@ -78,22 +77,22 @@ def productpage():
     if function == '产品(SKU)总览':
         protempload(buckets[0])
         product_gallery()
-    if function == '审核产品':
+    if function == '产品审核':
         protempload(buckets[0])
         productverifypage()
-    if function == '打开产品':
+    if function == '产品总览':
         protempload(buckets[0])
         verified_product()
-    if function == '打开SKU':
+    if function == 'SKU总览':
         protempload(buckets[0])
         verified_sku()
-    if function == '添加产品资料':
+    if function == '新增产品系列':
         protempload(buckets[0])
         product_uploadinfo('未审核', product_directory, False, False)
     if function == '添加SKU资料':
         protempload(buckets[0])
         product_uploadinfo('SKU', product_directory, False, False)
-    if function == '修改产品资料范本':
+    if function == '产品范本修改':
         protempload(buckets[0])
         with st.expander("修改产品资料范本"):
             formatter()
@@ -211,11 +210,11 @@ def product_search(version):
                                             df.drop('Unnamed: 0', axis=1, inplace=True)
                                         except:
                                             pass
-                                        table(df, df.columns, str(item) + str(tar), True)
+                                        table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0],path=path)
                                     if '.jpg' in tar2:
                                         img = Image.open(tar2)
                                         print(img.width, img.height)
-                                        img = img.resize((600, 600))
+                                        img = img.resize((100, 100))
                                         print(img.width, img.height)
                                         st.image(img)
 
@@ -232,28 +231,28 @@ def product_search(version):
 
 def product_gallery():
     global product_directory
-    st.subheader('产品(SKU)总览:')
-    sku_ls = []
-    for cc in (product_directory['SKU']):
-        for dd in (product_directory['SKU'][cc]):
-            sku_ls.append([cc, dd])
+    st.subheader('产品总览:')
+    product_ls = []
+    for cc in (product_directory['已审核']):
+        for dd in (product_directory['已审核'][cc]):
+            product_ls.append([cc, dd])
 
-    for sku in sku_ls:
-        typ = sku[0]
-        item = sku[1]
+    for product in product_ls:
+        typ = product[0]
+        item = product[1]
         col1, col2 = st.columns((1, 8))
-        lan = list(product_directory['SKU'][typ][item].keys())
+        lan = list(product_directory['已审核'][typ][item].keys())
         lang = lan[0]
-        plats = list(product_directory['SKU'][typ][item][lang].keys())
+        plats = list(product_directory['已审核'][typ][item][lang].keys())
         platform = plats[0]
         with col1:
             img_exist = False
             for tar in filter(lambda x: len(x) > 1,
-                              list(product_directory['SKU'][typ][item][lang][platform].keys())):
+                              list(product_directory['已审核'][typ][item][lang][platform].keys())):
 
                 for tar2 in filter(lambda x: len(x) > 1,
-                                   list(product_directory['SKU'][typ][item][lang][platform][tar].keys())):
-                    path = 'SKU/' + str(typ) + '/' + str(item) + '/' + str(
+                                   list(product_directory['已审核'][typ][item][lang][platform][tar].keys())):
+                    path = '已审核/' + str(typ) + '/' + str(item) + '/' + str(
                         lang) + '/' + str(platform) + '/' + tar + '/' + tar2
 
                     if '.jpg' in tar2:
@@ -277,17 +276,17 @@ def product_gallery():
         with col2:
             with st.expander(str(item), expanded=True):
                 if st.checkbox('查看' + str(item) + '相关文件'):
-                    lan = list(product_directory['SKU'][typ][item].keys())
+                    lan = list(product_directory['已审核'][typ][item].keys())
                     lang = lan[0]
-                    plats = list(product_directory['SKU'][typ][item][lang].keys())
+                    plats = list(product_directory['已审核'][typ][item][lang].keys())
                     platform = plats[0]
 
                     for tar in filter(lambda x: len(x) > 1,
-                                      list(product_directory['SKU'][typ][item][lang][platform].keys())):
+                                      list(product_directory['已审核'][typ][item][lang][platform].keys())):
 
                         for tar2 in filter(lambda x: len(x) > 1,
-                                           list(product_directory['SKU'][typ][item][lang][platform][tar].keys())):
-                            path = 'SKU/' + str(typ) + '/' + str(item) + '/' + str(
+                                           list(product_directory['已审核'][typ][item][lang][platform][tar].keys())):
+                            path = '已审核/' + str(typ) + '/' + str(item) + '/' + str(
                                 lang) + '/' + str(platform) + '/' + tar + '/' + tar2
                             if '.csv' in tar2:
                                 download(buckets[0], str(path), tar2)
@@ -296,11 +295,11 @@ def product_gallery():
                                     df.drop('Unnamed: 0', axis=1, inplace=True)
                                 except:
                                     pass
-                                table(df, df.columns, str(item) + str(tar), True)
+                                table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0],path=path)
                             if '.jpg' in tar2:
                                 img = Image.open(tar2)
                                 print(img.width, img.height)
-                                img = img.resize((600, 600))
+                                img = img.resize((100, 100))
                                 print(img.width, img.height)
                                 st.image(img)
                     if st.checkbox('上传图片(替换已有图片):', key=path):
@@ -406,81 +405,84 @@ def productverifypage():
         for c in filter(lambda x: len(x) > 1, (product_directory['驳回产品'][b])):
             unsupported_ls.append([b, c])
     typ_ls = set([i[0] for i in unsupported_ls])
-    item = st.selectbox('', filter(lambda x: len(x) > 1, typ_ls), key='驳回项目')
-    product_ls = product_directory['驳回产品'][item]
-    for product in product_ls:
-        if product is not None:
-            with st.expander(str(product), expanded=True):
-                if st.checkbox('审核' + str(product) + '相关文件'):
-                    st.write(product)
-                    try:
-                        lan = list(product_directory['驳回产品'][item][product].keys())
-                        lang = lan[0]
-                        plats = list(product_directory['驳回产品'][item][product][lang].keys())
-                        platform = plats[0]
-                        if st.checkbox('打开', key=str(lang + platform + product)):
-                            protempload(buckets[0])
-                            col1, col2, col3 = st.columns((3, 3, 3))
-                            for files in (list(product_directory['驳回产品'][item][product][lang][platform].keys())):
-                                for file in filter(lambda x: len(x) > 1,
-                                                   (list(product_directory['驳回产品'][item][product][lang][platform][
-                                                             files].keys()))):
+    if len(list(filter(lambda x: len(x) > 1, typ_ls))) == 0:
+        st.write('无')
+    else:
+        item = st.selectbox('', filter(lambda x: len(x) > 1, typ_ls), key='驳回项目')
+        product_ls = product_directory['驳回产品'][item]
+        for product in product_ls:
+            if product is not None:
+                with st.expander(str(product), expanded=True):
+                    if st.checkbox('审核' + str(product) + '相关文件'):
+                        st.write(product)
+                        try:
+                            lan = list(product_directory['驳回产品'][item][product].keys())
+                            lang = lan[0]
+                            plats = list(product_directory['驳回产品'][item][product][lang].keys())
+                            platform = plats[0]
+                            if st.checkbox('打开', key=str(lang + platform + product)):
+                                protempload(buckets[0])
+                                col1, col2, col3 = st.columns((3, 3, 3))
+                                for files in (list(product_directory['驳回产品'][item][product][lang][platform].keys())):
+                                    for file in filter(lambda x: len(x) > 1,
+                                                       (list(product_directory['驳回产品'][item][product][lang][platform][
+                                                                 files].keys()))):
 
-                                    col1.write(file, key=product)
-                                    if col2.checkbox('打开', key=file + product):
-                                        path = '驳回产品' + '/' + item + '/' + product + '/' + lang + '/' + platform + '/' + files + '/' + file
-                                        download(buckets[0], str(path), file)
-                                        try:
-                                            df = pd.read_csv(file)
+                                        col1.write(file, key=product)
+                                        if col2.checkbox('打开', key=file + product):
+                                            path = '驳回产品' + '/' + item + '/' + product + '/' + lang + '/' + platform + '/' + files + '/' + file
+                                            download(buckets[0], str(path), file)
                                             try:
-                                                df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                df = pd.read_csv(file)
+                                                try:
+                                                    df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                except:
+                                                    pass
+                                                table(df, df.columns, str(file), True)
+
+
+
                                             except:
-                                                pass
-                                            table(df, df.columns, str(file), True)
+                                                download(
+                                                    buckets[0],
+                                                    str(path),
+                                                    file)
+                                                st.image(file)
 
+                                deci = st.selectbox('决定', ['批准', '不批准'], key=product)
+                                if deci == '批准':
+                                    if st.checkbox('确认', key='批准确认' + product):
+                                        for group in (list(product_directory['未审核'][item][product][lang][platform].keys())):
+                                            for pssfile in (
+                                                    list(
+                                                        product_directory['未审核'][item][product][lang][platform][
+                                                            group].keys())):
+                                                path = item + '/' + product + '/' + lang + '/' + platform + '/' + \
+                                                       group + '/' + pssfile
+                                                download(buckets[0], '未审核' + '/' + str(path), pssfile)
+                                                upload(buckets[0], '已审核' + '/' + str(path), pssfile)
+                                                delete(buckets[0], '未审核' + '/' + str(path))
+                                                st.success('成功上传' + pssfile)
+                                                protempload(buckets[0])
 
+                                if deci == '不批准':
 
-                                        except:
-                                            download(
-                                                buckets[0],
-                                                str(path),
-                                                file)
-                                            st.image(file)
+                                    if st.checkbox('确认', key='不批准确认' + product):
+                                        for group in (list(product_directory['未审核'][item][product][lang][platform].keys())):
+                                            for pssfile in (
+                                                    list(
+                                                        product_directory['未审核'][item][product][lang][platform][
+                                                            group].keys())):
+                                                path = item + '/' + product + '/' + lang + '/' + platform + '/' + \
+                                                       group + '/' + pssfile
+                                                download(buckets[0], '未审核' + '/' + str(path), pssfile)
+                                                upload(buckets[0], '驳回产品' + '/' + str(path), pssfile)
+                                                delete(buckets[0], '未审核' + '/' + str(path))
+                                                st.success('成功上传' + pssfile)
+                                                protempload(buckets[0])
 
-                            deci = st.selectbox('决定', ['批准', '不批准'], key=product)
-                            if deci == '批准':
-                                if st.checkbox('确认', key='批准确认' + product):
-                                    for group in (list(product_directory['未审核'][item][product][lang][platform].keys())):
-                                        for pssfile in (
-                                                list(
-                                                    product_directory['未审核'][item][product][lang][platform][
-                                                        group].keys())):
-                                            path = item + '/' + product + '/' + lang + '/' + platform + '/' + \
-                                                   group + '/' + pssfile
-                                            download(buckets[0], '未审核' + '/' + str(path), pssfile)
-                                            upload(buckets[0], '已审核' + '/' + str(path), pssfile)
-                                            delete(buckets[0], '未审核' + '/' + str(path))
-                                            st.success('成功上传' + pssfile)
-                                            protempload(buckets[0])
-
-                            if deci == '不批准':
-
-                                if st.checkbox('确认', key='不批准确认' + product):
-                                    for group in (list(product_directory['未审核'][item][product][lang][platform].keys())):
-                                        for pssfile in (
-                                                list(
-                                                    product_directory['未审核'][item][product][lang][platform][
-                                                        group].keys())):
-                                            path = item + '/' + product + '/' + lang + '/' + platform + '/' + \
-                                                   group + '/' + pssfile
-                                            download(buckets[0], '未审核' + '/' + str(path), pssfile)
-                                            upload(buckets[0], '驳回产品' + '/' + str(path), pssfile)
-                                            delete(buckets[0], '未审核' + '/' + str(path))
-                                            st.success('成功上传' + pssfile)
-                                            protempload(buckets[0])
-
-                    except:
-                        print('error:productverifypage()')
+                        except:
+                            print('error:productverifypage()')
 
     return product_directory
 
@@ -498,9 +500,16 @@ def verified_product():
     for typ in dst_list:
         product_ls = filter(lambda x: len(x) > 1, list(product_directory['已审核'][typ].keys()))
         for item in product_ls:
-            col1, col2 = st.columns((1, 8))
+            col1, col2 = st.columns((1, 10))
+
             lan = list(product_directory['已审核'][typ][item].keys())
+            try:
+                lan.remove('SKU')
+            except:
+                pass
+
             lang = lan[0]
+
             plats = list(product_directory['已审核'][typ][item][lang].keys())
             platform = plats[0]
             with col1:
@@ -519,7 +528,7 @@ def verified_product():
                                 tar2)
                             img = Image.open(tar2)
                             print(img.width, img.height)
-                            img = img.resize((88, 88))
+                            img = img.resize((50, 50))
                             print(img.width, img.height)
                             st.image(img)
                             img_exist = True
@@ -527,21 +536,14 @@ def verified_product():
                 if not img_exist:
                     img = Image.open('image_not_found.jpg')
                     print(img.width, img.height)
-                    img = img.resize((88, 88))
+                    img = img.resize((50, 50))
                     print(img.width, img.height)
                     st.image(img)
 
             with col2:
                 with st.expander(str(item), expanded=True):
                     if st.checkbox('查看' + str(item) + '相关文件'):
-                        lan = list(product_directory['已审核'][typ][item].keys())
-                        try:
-                            lan = lan.remove('SKU')
-                        except:
-                            pass
-                        lang = lan[0]
-                        plats = list(product_directory['已审核'][typ][item][lang].keys())
-                        platform = plats[0]
+
 
                         for tar in filter(lambda x: len(x) > 1,
                                           list(product_directory['已审核'][typ][item][lang][platform].keys())):
@@ -558,12 +560,13 @@ def verified_product():
                                         df.drop('Unnamed: 0', axis=1, inplace=True)
                                     except:
                                         pass
-                                    table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0],path=path,height=150)
+                                    table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0], path=path,
+                                          height=150)
 
                                 if '.jpg' in tar2:
                                     img = Image.open(tar2)
                                     print(img.width, img.height)
-                                    img = img.resize((600, 600))
+                                    img = img.resize((200, 200))
                                     print(img.width, img.height)
                                     st.image(img)
 
@@ -578,8 +581,16 @@ def verified_product():
                                 st.success('图片上传成功')
 
                         if st.checkbox('创建SKU系列', key=str(item) + str(tar) + str(tar2)):
-                            asin_name = st.text_input('ASIN 名')
-                            sku_name = st.text_input('SKU 名')
+                            asin_name = st.text_input('ASIN 名(必填)')
+                            sku_name = st.text_input('SKU 名(必填)')
+                            worker_ls = st.multiselect('店铺(非必填)', [str(i) + '-' + str(k) for i, k in
+                                                           zip(nonread_file(buckets[1], '店铺/店铺资料.csv', '店铺资料.csv',
+                                                                            '店铺名', True),
+                                                            nonread_file(buckets[1], '店铺/店铺资料.csv', '店铺资料.csv', '站点',
+                                                                            True))])
+
+
+
                             if st.checkbox('确认创建SKU'):
                                 for tar in filter(lambda x: len(x) > 1,
                                                   list(product_directory['已审核'][typ][item][lang][platform].keys())):
@@ -592,22 +603,123 @@ def verified_product():
                                         uploadpath1 = 'SKU/' + str(typ) + '/' + str(asin_name) + '-' + str(
                                             sku_name) + '/' + str(
                                             lang) + '/' + str(platform) + '/' + tar + '/' + tar2
-                                        uploadpath2 = str('已审核') + '/' + str(typ) + '/' + str(item) +'/' + 'SKU/' + str(asin_name) + '/' + tar + '/' + tar2
+                                        uploadpath2 = str('已审核') + '/' + str(typ) + '/' + str(
+                                            item) + '/' + 'SKU/' + str(asin_name) + '/' + tar + '/' + tar2
                                         download(buckets[0], str(downloadpath), tar2)
                                         upload(buckets[0], str(uploadpath1), tar2)
                                         upload(buckets[0], str(uploadpath2), tar2)
                                         protempload(buckets[0])
+                                if len(worker_ls) != 0:
+                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                    assigner_df = pd.read_csv('产品配对.csv')
+                                    try:
+                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                    except:
+                                        pass
+                                    try:
+                                        os.remove('产品配对.csv')
+                                    except:
+                                        pass
+                                    clients = [str(asin_name) + '-' + str(sku_name)]
+                                    for worker in worker_ls:
+                                        for client in clients:
+                                            columns = assigner_df.columns
+                                            old_workers = list(assigner_df['店铺'])
+                                            new_clients = [i for i in clients if i not in columns]
+                                            old_clients = [j for j in clients if j in columns]
+                                            if client in new_clients:
+
+                                                if worker in old_workers:
+                                                    # new client old worker
+                                                    worker_ls = list(assigner_df['店铺'])
+                                                    pos = worker_ls.index(worker)
+                                                    add_ls = [u * 0 for u in range(len(assigner_df) - 1)]
+                                                    add_ls.insert(pos, 1)
+                                                    assigner_df[client] = add_ls
+                                                    try:
+                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                    except:
+                                                        pass
+                                                    assigner_df.to_csv('updatedcsv.csv')
+                                                    delete(buckets[2], '产品配对/产品配对.csv')
+                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                    os.remove('updatedcsv.csv')
+                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                    assigner_df = pd.read_csv('产品配对.csv')
+                                                    os.remove('产品配对.csv')
+                                                else:
+                                                    # new client new worker
+
+                                                    assigner_df[client] = [u * 0 for u in
+                                                                           range(len(assigner_df.columns) - 1)]
+                                                    add_ls = [0 * p for p in range(len(assigner_df.columns) - 2)]
+                                                    add_ls.append(1)
+                                                    add_ls.insert(0, str(worker))
+                                                    add_df = pd.Series(add_ls, index=assigner_df.columns)
+                                                    assigner_df = assigner_df.append(add_df, ignore_index=True)
+                                                    try:
+                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                    except:
+                                                        pass
+                                                    assigner_df.to_csv('updatedcsv.csv')
+                                                    delete(buckets[2], '产品配对/产品配对.csv')
+                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                    os.remove('updatedcsv.csv')
+                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                    assigner_df = pd.read_csv('产品配对.csv')
+                                                    os.remove('产品配对.csv')
+                                            if client in old_clients:
+                                                if worker in old_workers:
+                                                    # old client old worker
+
+                                                    worker_ls = list(assigner_df['店铺'])
+                                                    work_pos = worker_ls.index(str(worker))
+                                                    assigner_df.at[work_pos, client] = 1
+                                                    try:
+                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                    except:
+                                                        pass
+                                                    assigner_df.to_csv('updatedcsv.csv')
+                                                    delete(buckets[2], '产品配对/产品配对.csv')
+                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                    assigner_df = pd.read_csv('产品配对.csv')
+                                                    os.remove('产品配对.csv')
+
+                                                else:
+                                                    # old client new worker
+
+                                                    add_ls = [0 * u for u in range(len(assigner_df.columns) - 1)]
+                                                    add_ls.insert(0, worker)
+                                                    add_df = pd.Series(add_ls, index=assigner_df.columns)
+                                                    assigner_df = assigner_df.append(add_df, ignore_index=True)
+                                                    worker_ls = list(assigner_df['店铺'])
+                                                    work_pos = worker_ls.index(str(worker))
+                                                    assigner_df.at[work_pos, client] = 1
+                                                    try:
+                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                    except:
+                                                        pass
+                                                    assigner_df.to_csv('updatedcsv.csv')
+                                                    delete(buckets[2], '产品配对/产品配对.csv')
+                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                    assigner_df = pd.read_csv('产品配对.csv')
+                                                    os.remove('产品配对.csv')
+                                        st.success('完成')
+
                                 st.success('成功创建SKU')
-                if st.checkbox('打开关联sku',key=item):
+                if st.checkbox('打开关联sku', key=item):
                     for tar in filter(lambda x: len(x) > 1,
                                       list(product_directory['已审核'][typ][item]['SKU'].keys())):
-                        with st.expander(tar,expanded=True):
-                            if st.checkbox('打开',key=item+tar):
+                        with st.expander(tar, expanded=True):
+                            if st.checkbox('打开', key=item + tar):
                                 for tar2 in filter(lambda x: len(x) > 1,
-                                                  list(product_directory['已审核'][typ][item]['SKU'][tar].keys())):
+                                                   list(product_directory['已审核'][typ][item]['SKU'][tar].keys())):
                                     for tar3 in filter(lambda x: len(x) > 1,
-                                                       list(product_directory['已审核'][typ][item]['SKU'][tar][tar2].keys())):
-                                        path = str('已审核') + '/' + str(typ) + '/' + str(item) + '/' + 'SKU'  \
+                                                       list(product_directory['已审核'][typ][item]['SKU'][tar][
+                                                                tar2].keys())):
+                                        path = str('已审核') + '/' + str(typ) + '/' + str(item) + '/' + 'SKU' \
                                                + '/' + tar + '/' + tar2 + '/' + tar3
                                         if '.csv' in tar3:
                                             download(buckets[0], str(path), tar3)
@@ -616,17 +728,16 @@ def verified_product():
                                                 df.drop('Unnamed: 0', axis=1, inplace=True)
                                             except:
                                                 pass
-                                            table(df, df.columns, str(item) + str(tar) + str(tar2), True, bucket=buckets[0],
-                                                  path=path,height=150)
+                                            table(df, df.columns, str(item) + str(tar) + str(tar2), True,
+                                                  bucket=buckets[0],
+                                                  path=path, height=150)
 
                                         if '.jpg' in tar3:
                                             img = Image.open(tar3)
                                             print(img.width, img.height)
-                                            img = img.resize((600, 600))
+                                            img = img.resize((100, 100))
                                             print(img.width, img.height)
                                             st.image(img)
-
-
 
 
 def verified_sku():
@@ -663,7 +774,7 @@ def verified_sku():
                                     except:
                                         pass
 
-                                    table(df, df.columns, str(item) + str(tar), True)
+                                    table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0],path=path)
 
 
 
@@ -767,6 +878,14 @@ def product_uploadinfo(verify, dire, Type, Name):
     product_uploadinfo_submit = form.form_submit_button('上传')
 
     if product_uploadinfo_submit:
+
+        path = verify + '/' + typ + '/' + name + '/' + lang + '/' + platform + '/' \
+               + '评论' + '/'
+        upload(buckets[0], str(path) + 'review.csv', 'review.csv')
+
+        path = verify + '/' + typ + '/' + name + '/' + lang + '/' + platform + '/' \
+               + '提问' + '/'
+        upload(buckets[0], str(path) + 'qa.csv', 'qa.csv')
         if basic:
             path = verify + '/' + typ + '/' + name + '/' + lang + '/' + platform + '/' \
                    + '基础资料' + '/'
@@ -784,18 +903,11 @@ def product_uploadinfo(verify, dire, Type, Name):
             upload(buckets[0], str(path) + str(file_v.name), str(file_v.name))
             os.remove(str(file_v.name))
             form.success('视频上传成功')
+
     return product_directory
 
 
-PRODUCT_QA = """
- <div style="width:90%;height:100%;margin:1px;border-radius:5px;
-  background-color:#70dc70;font-size:18px;height:auto;border-left: 5px solid #dc70dc;">
- <h4 style="color:#000000;">{}</h4>
- <h4 style="color:#000000;">{}</h4>
- <h4 style="color:#000000;">{}</h4>
- <h6 style="color:#000000;text-align:center">{}</h6>
- </div>
- """
+
 
 
 def qa_format(qa):
