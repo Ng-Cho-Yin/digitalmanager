@@ -65,12 +65,14 @@ def productpage():
         '新增产品系列',
         '产品范本修改'
     ]
-    col1, col2 = st.columns((1, 3))
+    render_set_style_of_single_bar(["产品审核中", "产品总量", "SKU总量", "驳回项目"], [unver, ver, sku, failed])
+    col1, col2, col3 = st.columns((1, 1, 2))
+
     with col1:
         func = st.expander('功能', expanded=True)
         function = func.radio('', function_pages)
     with col2:
-        render_set_style_of_single_bar(["产品审核中", "产品总量", "SKU总量", "驳回项目"], [unver, ver, sku, failed])
+        sub_function = st.empty()
     if function == '产品(SKU)搜索':
         protempload(buckets[0])
         product_search(version=2)
@@ -82,7 +84,7 @@ def productpage():
         productverifypage()
     if function == '产品总览':
         protempload(buckets[0])
-        verified_product()
+        verified_product(sub_function)
     if function == 'SKU总览':
         protempload(buckets[0])
         verified_sku()
@@ -489,9 +491,13 @@ def productverifypage():
     return product_directory
 
 
-def verified_product():
+def verified_product(sub_function):
     global product_directory
-    st.subheader('打开产品资料:')
+
+    with sub_function.expander("",expanded=True):
+        sub_func = st.radio('其他选项',["基础资料","使用方法与故障排除"])
+
+    st.subheader('产品资料:')
 
     product_list = list(filter(lambda x: len(x) > 1, list(product_directory['已审核'].keys())))
     typ = st.selectbox('产品类别', ['全部'] + product_list)
@@ -553,169 +559,180 @@ def verified_product():
                                                list(product_directory['已审核'][typ][item][lang][platform][tar].keys())):
                                 path = str('已审核') + '/' + str(typ) + '/' + str(item) + '/' + str(lang) + '/' + str(
                                     platform) + '/' + tar + '/' + tar2
+                                if sub_func == '基础资料':
+                                    if '基础资料' in tar:
+                                        download(buckets[0], str(path), tar2)
+                                        df = pd.read_csv(tar2)
+                                        try:
+                                            df.drop('Unnamed: 0', axis=1, inplace=True)
+                                        except:
+                                            pass
+                                        table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0], path=path,
+                                              height=150)
 
-                                if '.csv' in tar2:
-                                    download(buckets[0], str(path), tar2)
-                                    df = pd.read_csv(tar2)
-                                    try:
-                                        df.drop('Unnamed: 0', axis=1, inplace=True)
-                                    except:
-                                        pass
-                                    table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0], path=path,
-                                          height=150)
+                                    if '图片' in tar:
+                                        download(
+                                            buckets[0],
+                                            str(path),
+                                            tar2)
+                                        img = Image.open(tar2)
+                                        print(img.width, img.height)
+                                        img = img.resize((200, 200))
+                                        print(img.width, img.height)
+                                        st.image(img)
+                                if sub_func == "使用方法与故障排除":
+                                    if '提问' in tar:
+                                        download(buckets[0], str(path), tar2)
+                                        df = pd.read_csv(tar2)
+                                        try:
+                                            df.drop('Unnamed: 0', axis=1, inplace=True)
+                                        except:
+                                            pass
+                                        table(df, df.columns, str(item) + str(tar), True, bucket=buckets[0], path=path,
+                                              height=150)
+                        if sub_func == '基础资料':
 
-                                if '.jpg' in tar2:
-                                    download(
-                                        buckets[0],
-                                        str(path),
-                                        tar2)
-                                    img = Image.open(tar2)
-                                    print(img.width, img.height)
-                                    img = img.resize((200, 200))
-                                    print(img.width, img.height)
-                                    st.image(img)
+                            if st.checkbox('上传图片(替换已有图片):', key=path):
+                                file_p = st.file_uploader('上传图片' + '/' + 'Upload Picture', type=['jpg'])
+                                if file_p is not None:
+                                    with open(file_p.name, 'wb') as p:
+                                        p.write(file_p.getbuffer())
 
-                        if st.checkbox('上传图片(替换已有图片):', key=path):
-                            file_p = st.file_uploader('上传图片' + '/' + 'Upload Picture', type=['jpg'])
-                            if file_p is not None:
-                                with open(file_p.name, 'wb') as p:
-                                    p.write(file_p.getbuffer())
+                                if st.checkbox('上传'):
+                                    path = str('已审核') + '/' + str(typ) + '/' + str(item) + '/' + str(
+                                        lang) + '/' + str(
+                                        platform) + '/' + '图片' + '/'
+                                    upload(buckets[0], str(path) + str(file_p.name), file_p.name)
+                                    os.remove(str(file_p.name))
+                                    st.success('图片上传成功')
 
-                            if st.checkbox('上传'):
-                                path = str('已审核') + '/' + str(typ) + '/' + str(item) + '/' + str(
-                                    lang) + '/' + str(
-                                    platform) + '/' + '图片' + '/'
-                                upload(buckets[0], str(path) + str(file_p.name), file_p.name)
-                                os.remove(str(file_p.name))
-                                st.success('图片上传成功')
+                            if st.checkbox('创建SKU系列', key=str(item) + str(tar) + str(tar2)):
+                                asin_name = st.text_input('ASIN 名(必填)')
+                                sku_name = st.text_input('SKU 名(必填)')
+                                worker_ls = st.multiselect('店铺(非必填)', [str(i) + '-' + str(k) for i, k in
+                                                                       zip(nonread_file(buckets[1], '店铺/店铺资料.csv',
+                                                                                        '店铺资料.csv',
+                                                                                        '店铺名', True),
+                                                                           nonread_file(buckets[1], '店铺/店铺资料.csv',
+                                                                                        '店铺资料.csv', '站点',
+                                                                                        True))])
 
-                        if st.checkbox('创建SKU系列', key=str(item) + str(tar) + str(tar2)):
-                            asin_name = st.text_input('ASIN 名(必填)')
-                            sku_name = st.text_input('SKU 名(必填)')
-                            worker_ls = st.multiselect('店铺(非必填)', [str(i) + '-' + str(k) for i, k in
-                                                                   zip(nonread_file(buckets[1], '店铺/店铺资料.csv',
-                                                                                    '店铺资料.csv',
-                                                                                    '店铺名', True),
-                                                                       nonread_file(buckets[1], '店铺/店铺资料.csv',
-                                                                                    '店铺资料.csv', '站点',
-                                                                                    True))])
+                                if st.checkbox('确认创建SKU'):
+                                    for tar in filter(lambda x: len(x) > 1,
+                                                      list(product_directory['已审核'][typ][item][lang][platform].keys())):
 
-                            if st.checkbox('确认创建SKU'):
-                                for tar in filter(lambda x: len(x) > 1,
-                                                  list(product_directory['已审核'][typ][item][lang][platform].keys())):
+                                        for tar2 in filter(lambda x: len(x) > 1,
+                                                           list(product_directory['已审核'][typ][item][lang][platform][
+                                                                    tar].keys())):
+                                            downloadpath = str('已审核') + '/' + str(typ) + '/' + str(item) + '/' + str(
+                                                lang) + '/' + str(platform) + '/' + tar + '/' + tar2
+                                            uploadpath1 = 'SKU/' + str(typ) + '/' + str(asin_name) + '-' + str(
+                                                sku_name) + '/' + str(
+                                                lang) + '/' + str(platform) + '/' + tar + '/' + tar2
+                                            uploadpath2 = str('已审核') + '/' + str(typ) + '/' + str(
+                                                item) + '/' + 'SKU/' + str(asin_name) + '/' + tar + '/' + tar2
+                                            download(buckets[0], str(downloadpath), tar2)
+                                            upload(buckets[0], str(uploadpath1), tar2)
+                                            upload(buckets[0], str(uploadpath2), tar2)
+                                            protempload(buckets[0])
+                                    if len(worker_ls) != 0:
+                                        download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                        assigner_df = pd.read_csv('产品配对.csv')
+                                        try:
+                                            assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                        except:
+                                            pass
+                                        try:
+                                            os.remove('产品配对.csv')
+                                        except:
+                                            pass
+                                        clients = [str(asin_name) + '-' + str(sku_name)]
+                                        for worker in worker_ls:
+                                            for client in clients:
+                                                columns = assigner_df.columns
+                                                old_workers = list(assigner_df['店铺'])
+                                                new_clients = [i for i in clients if i not in columns]
+                                                old_clients = [j for j in clients if j in columns]
+                                                if client in new_clients:
 
-                                    for tar2 in filter(lambda x: len(x) > 1,
-                                                       list(product_directory['已审核'][typ][item][lang][platform][
-                                                                tar].keys())):
-                                        downloadpath = str('已审核') + '/' + str(typ) + '/' + str(item) + '/' + str(
-                                            lang) + '/' + str(platform) + '/' + tar + '/' + tar2
-                                        uploadpath1 = 'SKU/' + str(typ) + '/' + str(asin_name) + '-' + str(
-                                            sku_name) + '/' + str(
-                                            lang) + '/' + str(platform) + '/' + tar + '/' + tar2
-                                        uploadpath2 = str('已审核') + '/' + str(typ) + '/' + str(
-                                            item) + '/' + 'SKU/' + str(asin_name) + '/' + tar + '/' + tar2
-                                        download(buckets[0], str(downloadpath), tar2)
-                                        upload(buckets[0], str(uploadpath1), tar2)
-                                        upload(buckets[0], str(uploadpath2), tar2)
-                                        protempload(buckets[0])
-                                if len(worker_ls) != 0:
-                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
-                                    assigner_df = pd.read_csv('产品配对.csv')
-                                    try:
-                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
-                                    except:
-                                        pass
-                                    try:
-                                        os.remove('产品配对.csv')
-                                    except:
-                                        pass
-                                    clients = [str(asin_name) + '-' + str(sku_name)]
-                                    for worker in worker_ls:
-                                        for client in clients:
-                                            columns = assigner_df.columns
-                                            old_workers = list(assigner_df['店铺'])
-                                            new_clients = [i for i in clients if i not in columns]
-                                            old_clients = [j for j in clients if j in columns]
-                                            if client in new_clients:
+                                                    if worker in old_workers:
+                                                        # new client old worker
+                                                        worker_ls = list(assigner_df['店铺'])
+                                                        pos = worker_ls.index(worker)
+                                                        add_ls = [u * 0 for u in range(len(assigner_df) - 1)]
+                                                        add_ls.insert(pos, 1)
+                                                        assigner_df[client] = add_ls
+                                                        try:
+                                                            assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                        except:
+                                                            pass
+                                                        assigner_df.to_csv('updatedcsv.csv')
+                                                        delete(buckets[2], '产品配对/产品配对.csv')
+                                                        upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                        os.remove('updatedcsv.csv')
+                                                        download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                        assigner_df = pd.read_csv('产品配对.csv')
+                                                        os.remove('产品配对.csv')
+                                                    else:
+                                                        # new client new worker
 
-                                                if worker in old_workers:
-                                                    # new client old worker
-                                                    worker_ls = list(assigner_df['店铺'])
-                                                    pos = worker_ls.index(worker)
-                                                    add_ls = [u * 0 for u in range(len(assigner_df) - 1)]
-                                                    add_ls.insert(pos, 1)
-                                                    assigner_df[client] = add_ls
-                                                    try:
-                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
-                                                    except:
-                                                        pass
-                                                    assigner_df.to_csv('updatedcsv.csv')
-                                                    delete(buckets[2], '产品配对/产品配对.csv')
-                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
-                                                    os.remove('updatedcsv.csv')
-                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
-                                                    assigner_df = pd.read_csv('产品配对.csv')
-                                                    os.remove('产品配对.csv')
-                                                else:
-                                                    # new client new worker
+                                                        assigner_df[client] = [u * 0 for u in
+                                                                               range(len(assigner_df.columns) - 1)]
+                                                        add_ls = [0 * p for p in range(len(assigner_df.columns) - 2)]
+                                                        add_ls.append(1)
+                                                        add_ls.insert(0, str(worker))
+                                                        add_df = pd.Series(add_ls, index=assigner_df.columns)
+                                                        assigner_df = assigner_df.append(add_df, ignore_index=True)
+                                                        try:
+                                                            assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                        except:
+                                                            pass
+                                                        assigner_df.to_csv('updatedcsv.csv')
+                                                        delete(buckets[2], '产品配对/产品配对.csv')
+                                                        upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                        os.remove('updatedcsv.csv')
+                                                        download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                        assigner_df = pd.read_csv('产品配对.csv')
+                                                        os.remove('产品配对.csv')
+                                                if client in old_clients:
+                                                    if worker in old_workers:
+                                                        # old client old worker
 
-                                                    assigner_df[client] = [u * 0 for u in
-                                                                           range(len(assigner_df.columns) - 1)]
-                                                    add_ls = [0 * p for p in range(len(assigner_df.columns) - 2)]
-                                                    add_ls.append(1)
-                                                    add_ls.insert(0, str(worker))
-                                                    add_df = pd.Series(add_ls, index=assigner_df.columns)
-                                                    assigner_df = assigner_df.append(add_df, ignore_index=True)
-                                                    try:
-                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
-                                                    except:
-                                                        pass
-                                                    assigner_df.to_csv('updatedcsv.csv')
-                                                    delete(buckets[2], '产品配对/产品配对.csv')
-                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
-                                                    os.remove('updatedcsv.csv')
-                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
-                                                    assigner_df = pd.read_csv('产品配对.csv')
-                                                    os.remove('产品配对.csv')
-                                            if client in old_clients:
-                                                if worker in old_workers:
-                                                    # old client old worker
+                                                        worker_ls = list(assigner_df['店铺'])
+                                                        work_pos = worker_ls.index(str(worker))
+                                                        assigner_df.at[work_pos, client] = 1
+                                                        try:
+                                                            assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                        except:
+                                                            pass
+                                                        assigner_df.to_csv('updatedcsv.csv')
+                                                        delete(buckets[2], '产品配对/产品配对.csv')
+                                                        upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                        download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                        assigner_df = pd.read_csv('产品配对.csv')
+                                                        os.remove('产品配对.csv')
 
-                                                    worker_ls = list(assigner_df['店铺'])
-                                                    work_pos = worker_ls.index(str(worker))
-                                                    assigner_df.at[work_pos, client] = 1
-                                                    try:
-                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
-                                                    except:
-                                                        pass
-                                                    assigner_df.to_csv('updatedcsv.csv')
-                                                    delete(buckets[2], '产品配对/产品配对.csv')
-                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
-                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
-                                                    assigner_df = pd.read_csv('产品配对.csv')
-                                                    os.remove('产品配对.csv')
+                                                    else:
+                                                        # old client new worker
 
-                                                else:
-                                                    # old client new worker
-
-                                                    add_ls = [0 * u for u in range(len(assigner_df.columns) - 1)]
-                                                    add_ls.insert(0, worker)
-                                                    add_df = pd.Series(add_ls, index=assigner_df.columns)
-                                                    assigner_df = assigner_df.append(add_df, ignore_index=True)
-                                                    worker_ls = list(assigner_df['店铺'])
-                                                    work_pos = worker_ls.index(str(worker))
-                                                    assigner_df.at[work_pos, client] = 1
-                                                    try:
-                                                        assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
-                                                    except:
-                                                        pass
-                                                    assigner_df.to_csv('updatedcsv.csv')
-                                                    delete(buckets[2], '产品配对/产品配对.csv')
-                                                    upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
-                                                    download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
-                                                    assigner_df = pd.read_csv('产品配对.csv')
-                                                    os.remove('产品配对.csv')
-                                        st.success('完成')
+                                                        add_ls = [0 * u for u in range(len(assigner_df.columns) - 1)]
+                                                        add_ls.insert(0, worker)
+                                                        add_df = pd.Series(add_ls, index=assigner_df.columns)
+                                                        assigner_df = assigner_df.append(add_df, ignore_index=True)
+                                                        worker_ls = list(assigner_df['店铺'])
+                                                        work_pos = worker_ls.index(str(worker))
+                                                        assigner_df.at[work_pos, client] = 1
+                                                        try:
+                                                            assigner_df.drop('Unnamed: 0', axis=1, inplace=True)
+                                                        except:
+                                                            pass
+                                                        assigner_df.to_csv('updatedcsv.csv')
+                                                        delete(buckets[2], '产品配对/产品配对.csv')
+                                                        upload(buckets[2], '产品配对/产品配对.csv', 'updatedcsv.csv')
+                                                        download(buckets[2], '产品配对/产品配对.csv', '产品配对.csv')
+                                                        assigner_df = pd.read_csv('产品配对.csv')
+                                                        os.remove('产品配对.csv')
+                                            st.success('完成')
 
                                 st.success('成功创建SKU')
                 if st.checkbox('打开关联sku', key=item):
@@ -916,7 +933,6 @@ def product_uploadinfo(verify, dire, Type, Name):
             form.success('视频上传成功')
 
     return product_directory
-
 
 
 
