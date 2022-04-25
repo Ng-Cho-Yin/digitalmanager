@@ -1,13 +1,12 @@
 import streamlit as st
 from backend import download
-from backend import upload
 from backend import iterator
-from backend import delete
 import pandas as pd
 import os
 from backend import table
+from accounts import accounts
+from client import client_assigner
 
-# 定义运输渠道 加入常规运输时间
 
 basic_directory = dict()
 buckets = ['karqbasics']
@@ -30,7 +29,9 @@ def basics():
     basic_directory = protempload(buckets[0])
     col1,col2,col3 = st.columns((1,4,1))
     col1.subheader('基础数据')
-    col3.metric(label="基础数据集", value=4)
+    col3.metric(label="基础数据集", value=7)
+    accounts()
+    client_assigner()
     shop()
     warehouse()
     transport()
