@@ -38,6 +38,7 @@ function_pages = [
 def huma():
     global huma_directory
     st.success('登陆身份:' + st.session_state.member)
+    st.warning('Under Maintainance')
     huma_directory = protempload(buckets[0])
     st.subheader('人力资源')
     col1, col2 = st.columns((1, 3))
