@@ -4,11 +4,13 @@ from backend import download
 from backend import upload
 from backend import delete
 from backend import iterator
-
+from backend import nonread_file
+from backend import openfile
+from backend import render_set_style_of_single_bar
 import os.path
-
+from datetime import date
 from backend import table
-
+import datetime
 
 basic_directory = dict()
 shop_directory = dict()
@@ -27,19 +29,12 @@ def protempload(bucket):
     return directory
 
 
-def nonread_file(bucket, path, file, col, lsit, pos=None):
-    download(bucket, path, file)
-    read = pd.read_csv(file)
-    os.remove(file)
-    if lsit:
-        return list(read[str(col)])
-    else:
-        return float(read[col].iloc[pos])
+
 
 
 def accounts():
-    st.success('登陆身份:' + st.session_state.member)
-    st.subheader('店铺帐号管理')
+    #st.success('登陆身份:' + st.session_state.member)
+    #st.subheader('店铺帐号管理')
     global product_directory
     product_directory = protempload(buckets[2])
     worker_assigner()
@@ -177,7 +172,7 @@ def product_assigner():
             except:
                 pass
             table(assigner_df, assigner_df.columns, str('产品配对.csv'), False)
-            assigner = st.form(key='assigner')
+            assigner = st.form(key='assigner-product_assigner')
             assigner.subheader('店铺匹配')
             col1, col2 = assigner.columns(2)
 
