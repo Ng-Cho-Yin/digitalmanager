@@ -60,7 +60,7 @@ def logistics():
     basic_directory = protempload(buckets[0])
     product_directory = protempload(buckets[1])
     logistics_directory = protempload(buckets[2])
-    warehouses_directory = protempload(buckets[3])
+
     A = B = C = D = 0
     for a in (logistics_directory['未发订单']):
         if len(a) > 1:
@@ -74,7 +74,7 @@ def logistics():
     for d in (logistics_directory['问题订单']):
         if len(d) > 1:
             D += 1
-    make_trans_order()
+    make_trans_order('karqbasics','karqproducts')
     col1, col2, col3, col4 = st.columns(4)
     col1.metric(label="未发快递", value=A)
     col2.metric(label="快递运输中", value=B)
@@ -89,8 +89,10 @@ def logistics():
         '到达订单',
         '问题订单'
     ]
-
-    pool = st.radio('选择物流池', function_pages)
+    col1, col2 = st.columns((1, 3))
+    with col1:
+        func = st.expander('订单查询', expanded=True)
+        pool = func.radio('', function_pages)
     if pool == '未发订单':
         unpack()
     if pool == '运输中订单':
@@ -103,13 +105,13 @@ def logistics():
     return basic_directory, product_directory
 
 
-def make_trans_order():
+def make_trans_order(karqbasics,karqproducts):
     with st.expander('发起运输订单', expanded=True):
         if st.checkbox('设置新订单'):
-            platform = st.selectbox('平台', nonread_file(buckets[0], '平台/平台.csv', '平台.csv', '平台', True))
+            platform = st.selectbox('平台', nonread_file(karqbasics, '平台/平台.csv', '平台.csv', '平台', True))
             account = st.selectbox('帐号', [str(i) + '-' + str(k) for i, k in
-                                          zip(nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '店铺名', True),
-                                              nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '站点', True))])
+                                          zip(nonread_file(karqbasics, '店铺/店铺资料.csv', '店铺资料.csv', '店铺名', True),
+                                              nonread_file(karqbasics, '店铺/店铺资料.csv', '店铺资料.csv', '站点', True))])
             try:
                 product_type_ls = list()
 
@@ -139,7 +141,7 @@ def make_trans_order():
                 tip_file = (
                     list(product_directory['SKU'][product_type][product][tip_lang][tip_platform][tip_product].keys())[
                         0])
-                volume = nonread_file(buckets[1],
+                volume = nonread_file(karqproducts,
                                       'SKU/' + str(product_type) + '/' + str(product) + '/' + str(tip_lang) + '/' + str(
                                           tip_platform) + '/' + str(tip_product) + '/' + str(tip_file), str(tip_file),
                                       '体积',
@@ -149,7 +151,7 @@ def make_trans_order():
                 tot_volume = amount * volume
             except:
                 pass
-            end_warehouse = st.selectbox('目的地仓库', nonread_file(buckets[0], '仓库/仓库资料.csv', '仓库资料.csv', '仓库名', True))
+            end_warehouse = st.selectbox('目的地仓库', nonread_file(karqbasics, '仓库/仓库资料.csv', '仓库资料.csv', '仓库名', True))
             document_file1 = st.file_uploader('相关文件1', type='pdf')
             document_file2 = st.file_uploader('相关文件2', type='pdf')
             if st.button('确定'):
@@ -296,9 +298,14 @@ def unpack():
                                 os.remove(pssfile)
                             st.success(u + '运输中')
 
+                    if u2.checkbox('删除订单',key=str(u)):
+                        for files in list(logistics_directory['未发订单'][u].keys()):
+                            delete(buckets[2], '未发订单' + '/' + str(u) + '/' + files)
+                            protempload(buckets[2])
+
 
 def moving_pack():
-    logistics_logging('运输中物流记录.csv', True, False, False, True)
+    logistics_logging('运输中物流记录.csv', True, False, False, True, height=400)
     u1, u2 = st.columns((3, 1))
     if len(list(logistics_directory['运输中订单'].keys())) > 1:
         for u in list(logistics_directory['运输中订单'].keys()):
@@ -306,9 +313,10 @@ def moving_pack():
                 with u1.expander(u, expanded=True):
                     if st.checkbox('查看' + u + '相关资料'):
                         for files in list(logistics_directory['运输中订单'][u].keys()):
-                            fname, extension = os.path.splitext(files)
                             path = '运输中订单' + '/' + u + '/' + files
                             openfile(buckets[2], path, files, False)
+                            fname, extension = os.path.splitext(files)
+                            st.write(files)
                             try:
                                 os.remove(files)
                             except:
@@ -446,7 +454,8 @@ def logistics_logging(csv, show, add, delet, check_delay, content=None, dele_val
     if check_delay:
         delay_df = df[(df['预计到达日期'] <= str(today))]
         st.subheader('超时订单:')
-        st.table(delay_df)
+        table(delay_df, delay_df.columns, '超时订单.csv', False, height=height/2)
+        #st.table(delay_df)
     os.remove(csv)
 
 
