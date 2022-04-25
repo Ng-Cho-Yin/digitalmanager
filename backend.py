@@ -25,6 +25,10 @@ def upload(bucket, path, local):
     bucket = oss2.Bucket(auth, 'http://oss-cn-shenzhen.aliyuncs.com', bucket)
     bucket.put_object_from_file(path, local)
 
+def copy(src_bucket_name,dest_bucket_name, src_object_name, dest_object_name):
+    bucket = oss2.Bucket(auth, 'http://oss-cn-shenzhen.aliyuncs.com', dest_bucket_name)
+    bucket.copy_object(src_bucket_name, src_object_name, dest_object_name)
+
 
 def iterator(bucket):
     bucket = oss2.Bucket(auth, 'http://oss-cn-shenzhen.aliyuncs.com', bucket)
@@ -161,7 +165,7 @@ def table(data, cls, name, edit, bucket=None, path=None, fit=False,height=300,lo
                 #st.write("输出文件")
                 #st.table(ag['data'])
                 ag['data'].to_csv('updatedcsv.csv')
-                if st.checkbox('确认更新文件', key=name):
+                if st.button('确认更新文件', key=name):
                     plus = pd.read_csv('updatedcsv.csv')
                     for k in range(3):
                         content = [' ' for i in range(len(plus.columns))]
