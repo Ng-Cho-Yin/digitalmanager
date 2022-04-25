@@ -1,26 +1,43 @@
 # https://karqlife.herokuapp.com/
 
 
+# [theme]
+#
+# # Primary accent for interactive elements
+# primaryColor = '#FF974B'
+#
+# # Background color for the main content area
+# backgroundColor = '#FFFFFF'
+#
+# # Background color for sidebar and most interactive widgets
+# secondaryBackgroundColor = '#F5F5F5'
+#
+# # Color used for almost all text
+# textColor = '#31333F'
+#
+# # Font family for all text in the app, except code blocks
+# # Accepted values (serif | sans serif | monospace)
+# # Default: "sans serif"
+# font = "sans serif"
+
 
 import streamlit as st
+from streamlit_option_menu import option_menu
 from productpage import productpage
 from mainpage import mainpage
 from huma import huma
 from shop import shop
 from logistics import logistics
 from client import client
-from accounts import accounts
 from basics import basics
 from warehouse import warehouse
 from finance import finance
 from backend import download
-from backend import upload
 from backend import iterator
-from backend import delete
 import pandas as pd
 import os
-from backend import table
 from datetime import date
+import asyncio
 
 st.set_page_config(layout='wide', page_title='电商智能管理平台')
 
@@ -34,12 +51,11 @@ st.markdown(hide_menu_style, unsafe_allow_html=True)
 if 'member' not in st.session_state:
     st.session_state.member = ''
 function_pages = {
-    "主页":mainpage,
-    "人力资源":huma,
+    "主页": mainpage,
+    "人力资源": huma,
     "财务管理": finance,
     "产品资料": productpage,
-    "店铺管理": shop,
-    '店铺匹配': accounts,
+    "店铺经营": shop,
     '物流管理': logistics,
     '仓库管理': warehouse,
     '客户维护': client,
@@ -120,9 +136,31 @@ def login_page():
 
 # f
 
-def mainpage():
-    st.sidebar.image('logo.png')
-    page = st.sidebar.radio('选择页面', tuple(function_pages.keys()))
+async def mainpage():
+    # st.sidebar.image('logo.png')
+    # page = st.sidebar.radio('选择页面', tuple(function_pages.keys()))
+
+    with st.sidebar:
+        st.image('logo.png')
+        page = option_menu(
+            menu_icon='house',
+            menu_title=st.session_state.member,
+            options=list(function_pages.keys())
+
+        )
+
+
+
+
+
+
+
+    # st.image('logo.png')
+    # page = option_menu(
+    #     menu_icon='house',
+    #     menu_title=st.session_state.member,
+    #     options=list(function_pages.keys()),
+    #     orientation='horizontal')
 
     if not st.session_state.login:
         function_pages[page]()
@@ -136,4 +174,4 @@ if st.session_state.login:
     login_page()
 
 if not st.session_state.login:
-    mainpage()
+    asyncio.run(mainpage())
