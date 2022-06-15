@@ -15,7 +15,7 @@ import datetime
 basic_directory = dict()
 shop_directory = dict()
 product_directory = dict()
-buckets = ['karqbasics', 'karqshops','karqproducts']
+buckets = ['karqbasics', 'karqshops', 'karqproducts']
 
 
 def protempload(bucket):
@@ -29,12 +29,9 @@ def protempload(bucket):
     return directory
 
 
-
-
-
 def accounts():
-    #st.success('登陆身份:' + st.session_state.member)
-    #st.subheader('店铺帐号管理')
+    # st.success('登陆身份:' + st.session_state.member)
+    # st.subheader('店铺帐号管理')
     global product_directory
     product_directory = protempload(buckets[2])
     worker_assigner()
@@ -59,13 +56,15 @@ def worker_assigner():
             assigner.subheader('店铺匹配')
             col1, col2 = assigner.columns(2)
             col1.write('选择店铺')
-            clients = col1.multiselect('店铺', [str(i) + '-' + str(k) for i, k in
+            shop_list = [str(i) + '-' + str(k) for i, k in
                                               zip(nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '店铺名', True),
-                                                  nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '站点', True))])
+                                                  nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '站点', True))]
+            shop_list = list(filter(lambda x:len(x) > 3,shop_list))
+            clients = col1.multiselect('店铺',shop_list )
             col2.write('选择运营人员')
             download(buckets[0], ('用户' + '/' + '用户.csv'), '用户.csv')
             df = pd.read_csv('用户.csv')
-            client_staff = list(df[(df['角色'] == '销售')]['帐号'])
+            client_staff = filter(lambda x: len(x) > 1, list(df[(df['角色'] == '销售')]['帐号']))
             worker = col2.selectbox('运营人员', client_staff)
             if assigner.form_submit_button('匹配'):
                 for client in clients:
@@ -155,7 +154,6 @@ def worker_assigner():
                 st.success('完成')
 
 
-
 def product_assigner():
     global product_directory
 
@@ -185,8 +183,8 @@ def product_assigner():
 
             col2.write('选择店铺')
             worker = col2.selectbox('店铺', [str(i) + '-' + str(k) for i, k in
-                                              zip(nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '店铺名', True),
-                                                  nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '站点', True))])
+                                           zip(nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '店铺名', True),
+                                               nonread_file(buckets[0], '店铺/店铺资料.csv', '店铺资料.csv', '站点', True))])
             if assigner.form_submit_button('匹配'):
                 for client in clients:
                     columns = assigner_df.columns
